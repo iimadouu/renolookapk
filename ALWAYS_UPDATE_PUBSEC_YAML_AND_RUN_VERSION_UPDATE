@@ -1,0 +1,57 @@
+RELEASE CHECKLIST — follow these steps for every Android app update.
+
+1. In the Flutter project root, increment the version in pubspec.yaml.
+   Example: version: 1.0.1+5
+   - The part before + is the user-facing version.
+   - The number after + is the Android build number. Increase it for every
+     release so Android can install the new APK over the previous version.
+
+2. Generate apkrepo/latest.json from pubspec.yaml:
+   python .\apkrepo\versionUpdate.py
+   Confirm that apkrepo/latest.json contains the exact version, including +build.
+
+3. Build the release APK from the Flutter project root:
+   flutter build apk --release
+   Copy the new APK into apkrepo, replacing the previous local copy:
+   Copy-Item -Force .\build\app\outputs\flutter-apk\app-release.apk .\apkrepo\app-release.apk
+   Keep the same Android application ID and signing key for upgrades.
+
+4. Commit and push the metadata to the separate apkrepo Git repository
+   BEFORE creating a GitHub Release. Releases need an existing commit/tag;
+   an empty GitHub repository returns HTTP 422 when creating the first release.
+   First publication from the clean-main branch:
+   cd .\apkrepo
+   git add .gitignore latest.json versionUpdate.py ALWAYS_UPDATE_PUBSEC_YAML_AND_RUN_VERSION_UPDATE
+   git commit -m "Add app version metadata"
+   git push -u origin clean-main:main
+
+   For later releases, while in apkrepo:
+   git add latest.json
+   git commit -m "Update app version to 1.0.1+5"
+   git push origin HEAD:main
+
+5. Publish the APK as a GitHub Release asset; never commit the APK to Git.
+   From inside apkrepo, after the metadata commit has been pushed:
+   gh release create "v1.0.1+5" .\app-release.apk --title "v1.0.1+5" --notes "New update 1.0.1+5"
+   Use the version you actually released in the tag, title, and notes.
+   Keep the asset name exactly app-release.apk. The backend's stable APK URL
+   should resolve to the asset on the latest release:
+   https://github.com/iimadouu/renolookapk/releases/latest/download/app-release.apk
+
+6. Verify the backend contract before considering the release complete.
+   GET https://barberhouse-api.imadedar98.workers.dev/app/latest-version
+   It must return HTTP 200 and JSON containing both fields:
+   {"version":"1.0.1+5","downloadUrl":"https://github.com/iimadouu/renolookapk/releases/latest/download/app-release.apk"}
+   Open the returned downloadUrl and confirm the APK downloads. If the route
+   returns 404 or the version is stale, fix/deploy the Worker or publish the
+   metadata before expecting the app's launch update check to find the release
+
+
+Important:
+- The app checks the Worker endpoint /app/latest-version at launch. It does
+  not read latest.json directly; the Worker reads latest.json and returns the
+  version and downloadUrl.
+- The app compares version and build number. A higher version/build triggers
+  the non-dismissable update dialog; its Update button opens downloadUrl.
+- app-release.apk is ignored by apkrepo/.gitignore because regular GitHub Git
+  pushes reject files over 100 MB. Upload it to the GitHub Release instead.
