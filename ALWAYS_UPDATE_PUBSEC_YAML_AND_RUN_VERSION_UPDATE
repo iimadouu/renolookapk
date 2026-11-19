@@ -1,3 +1,17 @@
+flutter build apk --release
+Copy-Item .\build\app\outputs\flutter-apk\app-release.apk .\apkrepo\app-release.apk -Force
+python .\apkrepo\versionUpdate.py
+
+Set-Location .\apkrepo
+gh release create "v1.0.0+6" ".\app-release.apk" --title "v1.0.0+6" --notes "RenoLook Android update 1.0.0+6"
+git add latest.json ALWAYS_UPDATE_PUBSEC_YAML_AND_RUN_VERSION_UPDATE
+git commit -m "Publish app version 1.0.0+6"
+git push origin HEAD:main
+
+
+
+
+
 RELEASE CHECKLIST — follow these steps for every Android app update.
 
 1. In the Flutter project root, increment the version in pubspec.yaml.
