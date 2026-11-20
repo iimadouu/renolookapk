@@ -3,7 +3,10 @@ Copy-Item .\build\app\outputs\flutter-apk\app-release.apk .\apkrepo\app-release.
 python .\apkrepo\versionUpdate.py
 
 Set-Location .\apkrepo
-gh release create "v1.0.0+6" ".\app-release.apk" --title "v1.0.0+6" --notes "RenoLook Android update 1.0.0+6"
+
+THE VERIOSN BELOW MUST BE UPDATED 
+
+gh release create "v1.0.0+7" ".\app-release.apk" --title "v1.0.0+7" --notes "RenoLook Android update 1.0.0+7"
 git add latest.json ALWAYS_UPDATE_PUBSEC_YAML_AND_RUN_VERSION_UPDATE
 git commit -m "Publish app version 1.0.0+6"
 git push origin HEAD:main
